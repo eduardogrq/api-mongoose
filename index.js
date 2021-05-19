@@ -36,6 +36,19 @@ server.get('/koders', async (request, response) => {
     })
 })
 
+server.post('/koders', (request, response)=>{
+
+    const {name, lastName, age, gender} = request.body
+    
+    const newKoder = {name, lastName, age, gender}
+
+    Koder.create(newKoder)
+
+    response.json({
+        message : 'koder created: ', newKoder,
+    })
+})
+
 
 server.listen(8080, () => {
     console.log('server is listening')
