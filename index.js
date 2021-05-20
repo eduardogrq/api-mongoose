@@ -22,10 +22,24 @@ server.use(express.json())
 server.get('/koders', async (request, response) => {
 
     const gender = request.query.gender
+    const age = request.query.age
+    const isMinAge = new Boolean(request.query.is_min_age)
 
     // Condicional con función de filtro por género o imprimir todo sin query de género
-    let allKoders
-    gender? allKoders = await Koder.find({ gender: gender }): allKoders = await Koder.find()
+    const filters = {}
+
+    if(gender) filters.gender = gender
+
+    if(age) {
+        if(isMinAge.valueOf()){
+            filters.age = { $gte: age }
+        } else{
+            filters.age = age
+        }
+    }
+    // gender ? allKoders = await Koder.find({ gender: gender }): allKoders = await Koder.find()
+
+    const allKoders = await Koder.find(filters)
 
     response.json({
         message: 'all koders',
@@ -36,22 +50,24 @@ server.get('/koders', async (request, response) => {
     })
 })
 
-server.post('/koders', (request, response)=>{
+server.post('/koders', async(request, response)=>{
 
-    const {name, lastName, age, gender} = request.body
+    // Manejo de errores, esto para que el servidor no deje de responder si recibe algo diferente.
+    try{
+        const {name, lastName, age, gender} = request.body
+        await Koder.create({name, lastName, age, gender})
+        response.json({
+            message : 'koder created: ', newKoder
+        })
+
+    } catch(error){
+        response.status(400)
+        response.json({
+            success: false,
+            message: error.message
+        })
+    }
     
-    const newKoder = {name, lastName, age, gender}
-
-    Koder.create(newKoder)
-
-    response.json({
-        message : 'koder created: ', newKoder,
-    })
-})
-
-
-server.listen(8080, () => {
-    console.log('server is listening')
 })
 
 // Primero conectar a la base de datos y después al servidor
@@ -62,3 +78,8 @@ mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true})
     .catch((error) => {
         console.log('error: ', error)
     })
+
+server.listen(8080, () => {
+    console.log('server is listening')
+})
+
